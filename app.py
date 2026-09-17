@@ -44,11 +44,11 @@ HOME_HTML = """
         .btn { background: #0056b3; color: white; border: none; padding: 10px; font-size: 1rem; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; }
         .btn-share { background: #28a745; }
         .card { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        a { text-decoration: none; color: #0056b3; font-weight: bold; font-size: 1rem; display: block; }
+        a { text-decoration: none; color: #0056b3; font-weight: bold; font-size: 1rem; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 0.9rem; }
         .admin-link { display: block; margin-top: 25px; text-align: center; font-size: 0.9rem; color: #666; }
         .badge { background: #e2e8f0; color: #475569; font-size: 0.75rem; padding: 3px 6px; border-radius: 4px; float: right; }
-        .author-text { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .author-text { font-size: 0.8rem; color: #666; margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px; }
     </style>
 </head>
 <body>
@@ -71,7 +71,7 @@ HOME_HTML = """
     </div>
 
     {% if session.get('user') %}
-        <!-- SEARCH BOX: ONLY VISIBLE IF LOGGED IN -->
+        <!-- SEARCH BOX -->
         <div class="box">
             <h2>Universal Search (Any Word or Topic)</h2>
             <form action="/" method="GET">
@@ -84,224 +84,107 @@ HOME_HTML = """
         <div class="box" style="border-top: 4px solid #28a745;">
             <h2>Contribute a Word or Topic</h2>
             <form action="/add" method="POST">
-                <input type="text" name="title" placeholder="Word or Topic Title..." required>
-                <textarea name="desc" rows="2" placeholder="Write description or meaning..." required></textarea>
-                <button type="submit" class="btn btn-share">Publish Word</button>
+                <input type="text" name="title" placeholder="Word or Topic title..." required>
+                <textarea name="desc" rows="3" placeholder="Provide description or answer..." required></textarea>
+                <button type="submit" class="btn btn-share">Publish to System</button>
             </form>
         </div>
+    {% else %}
+        <div class="box" style="text-align: center; padding: 25px;">
+            <h2 style="margin-bottom: 10px;">Welcome to Universal Smart Search</h2>
+            <p style="color: #666; font-size: 0.95rem; margin-bottom: 15px;">Please log in or create an account to search the knowledge base and contribute new topics.</p>
+            <a href="/user-login" style="display: inline-block; background: #0056b3; color: white; padding: 10px 20px; border-radius: 6px; margin-right: 10px;">Login</a>
+            <a href="/user-register" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; border-radius: 6px;">Sign Up</a>
+        </div>
+    {% endif %}
 
-        <!-- SEARCH RESULTS -->
-        {% if query %}
-            <h3>Results for "{{ query }}"</h3>
+    <!-- RESULTS SECTION -->
+    {% if query %}
+        <div style="margin-top: 20px;">
+            <h3 style="font-size: 1.1rem; color: #555;">Results for "{{ query }}":</h3>
             {% if results %}
                 {% for id, item in results.items() %}
                 <div class="card">
                     <span class="badge">ID: {{ id }}</span>
-                    <a href="/detail/{{ id }}">{{ item.title }}</a>
-                    <div class="author-text">Contributed by: {{ item.author }}</div>
+                    <a href="/detail/{{ id }}" style="font-size: 1.1rem; margin-bottom: 5px; display:inline-block;">{{ item.title }}</a>
+                    <p style="margin: 8px 0; color: #444; line-height: 1.4; font-size: 0.95rem;">{{ item.desc }}</p>
+                    <div class="author-text">Contributed by: <strong>{{ item.author }}</strong></div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="card">
-                    <p style="margin:0; color:#666;">No results found for "{{ query }}".</p>
-                </div>
+                <div class="card"><p style="margin:0; color:#666;">No matching records found.</p></div>
             {% endif %}
-        {% endif %}
-    {% else %}
-        <!-- GUEST GATE: BLOCKS SEARCH & CONTENT UNTIL LOGIN -->
-        <div class="box" style="text-align: center; padding: 30px;">
-            <h2>🔒 Access Restricted</h2>
-            <p style="color: #666; margin-bottom: 20px;">You must log in or sign up to access the universal search engine and contributions.</p>
-            <a href="/user-login" class="btn" style="display: inline-block; margin-bottom: 10px; text-decoration: none;">Login to Your Account</a>
-            <a href="/user-register" class="btn btn-share" style="display: inline-block; text-decoration: none;">Create New Account</a>
         </div>
     {% endif %}
 
-    <a href="/admin" class="admin-link">🔒 Admin Login & Dashboard</a>
+    <a href="/admin" class="admin-link">🔒 Admin Portal Access</a>
 </body>
 </html>
 """
 
 USER_LOGIN_HTML = """
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Login</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; }
-        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn { background: #0056b3; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }
-    </style>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>User Login</title>
+<style>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; } .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; } .btn { background: #0056b3; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; } .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }</style>
 </head>
-<body>
-    <div class="box">
-        <h2>User Login</h2>
-        {% if error %}<div class="error">{{ error }}</div>{% endif %}
-        <form method="POST">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" class="btn">Login</button>
-        </form>
-        <p style="text-align: center; margin-top: 15px; font-size: 0.9rem;">Don't have an account? <a href="/user-register" style="color:#28a745; text-decoration:none;">Sign Up</a></p>
-        <p style="text-align: center; margin-top: 10px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p>
-    </div>
-</body>
-</html>
+<body><div class="box"><h2>User Login</h2>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST"><input type="text" name="username" placeholder="Username" required><input type="password" name="password" placeholder="Password" required><button type="submit" class="btn">Login</button></form>
+<p style="text-align: center; margin-top: 15px; font-size: 0.9rem;">Don't have an account? <a href="/user-register" style="color:#28a745; text-decoration:none;">Sign Up</a></p>
+<p style="text-align: center; margin-top: 10px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p></div></body></html>
 """
 
 USER_REGISTER_HTML = """
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; }
-        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }
-    </style>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Create Account</title>
+<style>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; } .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; } .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; } .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }</style>
 </head>
-<body>
-    <div class="box">
-        <h2>Create an Account</h2>
-        {% if error %}<div class="error">{{ error }}</div>{% endif %}
-        <form method="POST">
-            <input type="text" name="username" placeholder="Choose Username" required>
-            <input type="password" name="password" placeholder="Choose Password" required>
-            <button type="submit" class="btn">Sign Up</button>
-        </form>
-        <p style="text-align: center; margin-top: 15px; font-size: 0.9rem;">Already have an account? <a href="/user-login" style="color:#0056b3; text-decoration:none;">Login</a></p>
-        <p style="text-align: center; margin-top: 10px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p>
-    </div>
-</body>
-</html>
+<body><div class="box"><h2>Create an Account</h2>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST"><input type="text" name="username" placeholder="Choose Username" required><input type="password" name="password" placeholder="Choose Password" required><button type="submit" class="btn">Sign Up</button></form>
+<p style="text-align: center; margin-top: 15px; font-size: 0.9rem;">Already have an account? <a href="/user-login" style="color:#0056b3; text-decoration:none;">Login</a></p>
+<p style="text-align: center; margin-top: 10px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p></div></body></html>
 """
 
 DETAIL_HTML = """
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ item.title }}</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; color: #111; font-size: 1.2rem; }
-        p { line-height: 1.5; color: #555; }
-        .author-text { font-size: 0.85rem; color: #666; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .back-btn { display: inline-block; margin-top: 20px; color: white; background: #0056b3; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; }
-    </style>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{{ item.title }}</title>
+<style>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; margin: 0; } .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } h2 { margin-top: 0; color: #111; font-size: 1.2rem; } p { line-height: 1.5; color: #555; } .author-text { font-size: 0.85rem; color: #666; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; } .back-btn { display: inline-block; margin-top: 20px; color: white; background: #0056b3; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; }</style>
 </head>
-<body>
-    <div class="card">
-        <h2>{{ item.title }}</h2>
-        <p>{{ item.desc }}</p>
-        <div class="author-text">Contributed by: <strong>{{ item.author }}</strong></div>
-        <a href="/" class="back-btn">← Back to Search Page</a>
-    </div>
-</body>
-</html>
+<body><div class="card"><h2>{{ item.title }}</h2><p>{{ item.desc }}</p><div class="author-text">Contributed by: <strong>{{ item.author }}</strong></div><a href="/" class="back-btn">← Back to Search Page</a></div></body></html>
 """
 
 ADMIN_LOGIN_HTML = """
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; }
-        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }
-    </style>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Login</title>
+<style>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; } .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; } .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; } .error { color: red; font-size: 0.9rem; margin-bottom: 10px; }</style>
 </head>
-<body>
-    <div class="box">
-        <h2>Admin Portal Login</h2>
-        {% if error %}<div class="error">{{ error }}</div>{% endif %}
-        <form method="POST">
-            <input type="text" name="username" placeholder="Username (admin)" required>
-            <input type="password" name="password" placeholder="Password (password123)" required>
-            <button type="submit" class="btn">Login</button>
-        </form>
-        <p style="text-align: center; margin-top: 15px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p>
-    </div>
-</body>
-</html>
+<body><div class="box"><h2>Admin Portal Login</h2>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST"><input type="text" name="username" placeholder="Username (admin)" required><input type="password" name="password" placeholder="Password (password123)" required><button type="submit" class="btn">Login</button></form>
+<p style="text-align: center; margin-top: 15px;"><a href="/" style="color:#0056b3; text-decoration:none; font-size: 0.9rem;">← Back to Home</a></p></div></body></html>
 """
 
 ADMIN_DASHBOARD_HTML = """
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; }
-        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .logout { background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; float: right; font-size: 0.85rem; }
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: sans-serif; }
-        .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .del-btn { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 0.8rem; float: right; }
-        ul { padding-left: 0; list-style: none; margin-top: 5px; }
-        li { background: #f9f9f9; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #eee; overflow: hidden; font-size: 0.9rem; }
-        .section-title { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; color: #444; font-size: 1.1rem; }
-    </style>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Dashboard</title>
+<style>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; } .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 15px; } .logout { background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; float: right; font-size: 0.85rem; } input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: sans-serif; } .btn { background: #28a745; color: white; border: none; padding: 10px; width: 100%; font-size: 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; } .del-btn { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 0.8rem; float: right; } ul { padding-left: 0; list-style: none; margin-top: 5px; } li { background: #f9f9f9; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #eee; overflow: hidden; font-size: 0.9rem; } .section-title { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; color: #444; font-size: 1.1rem; }</style>
 </head>
 <body>
-    <div class="box">
-        <a href="/logout" class="logout">Logout</a>
-        <h2>Admin Dashboard</h2>
-        <p style="margin-top:0;">Total Database Entries: <strong>{{ database|length }}</strong> | Registered Users: <strong>{{ users_db|length }}</strong></p>
-        
-        <h3 class="section-title">Add New Item Manually</h3>
-        <form method="POST" action="/admin/add">
-            <input type="text" name="title" placeholder="Item Title..." required>
-            <textarea name="desc" rows="2" placeholder="Item Description..." required></textarea>
-            <button type="submit" class="btn">Add to Database</button>
-        </form>
-    </div>
-
-    <!-- Registered Users Management Box -->
-    <div class="box">
-        <h3 class="section-title" style="margin-top:0;">Registered User Accounts</h3>
-        {% if users_db %}
-            <ul>
-                {% for uname in users_db.keys() %}
-                    <li>
-                        <span>👤 <strong>{{ uname }}</strong></span>
-                        <a href="/admin/delete-user/{{ uname }}" class="del-btn" onclick="return confirm('Delete user {{ uname }}?');">Remove User</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p style="color: #666; font-size: 0.9rem;">No regular users registered yet.</p>
-        {% endif %}
-    </div>
-
-    <!-- Database Entries Management Box -->
-    <div class="box">
-        <h3 class="section-title" style="margin-top:0;">Manage Database Entries</h3>
-        <ul>
-            {% for id, item in database.items() %}
-                <li>
-                    <span><strong>{{ item.title }}</strong> <small style="color:#666;">({{ item.author }})</small></span>
-                    <a href="/admin/delete/{{ id }}" class="del-btn" onclick="return confirm('Delete this item?');">Delete</a>
-                </li>
-            {% endfor %}
-        </ul>
-        <p style="margin-bottom:0; margin-top: 15px;"><a href="/" style="color:#0056b3; text-decoration:none; font-weight:bold;">← Go to Public Search Page</a></p>
-    </div>
-</body>
-</html>
+<div class="box"><a href="/logout" class="logout">Logout</a><h2>Admin Dashboard</h2>
+<p style="margin-top:0;">Total Database Entries: <strong>{{ database|length }}</strong> | Registered Users: <strong>{{ users_db|length }}</strong></p>
+<h3 class="section-title">Add New Item Manually</h3>
+<form method="POST" action="/admin/add"><input type="text" name="title" placeholder="Item Title..." required><textarea name="desc" rows="2" placeholder="Item Description..." required></textarea><button type="submit" class="btn">Add to Database</button></form></div>
+<div class="box"><h3 class="section-title" style="margin-top:0;">Registered User Accounts</h3>
+{% if users_db %}<ul>{% for uname in users_db.keys() %}<li><span>👤 <strong>{{ uname }}</strong></span><a href="/admin/delete-user/{{ uname }}" class="del-btn" onclick="return confirm('Delete user {{ uname }}?');">Remove User</a></li>{% endfor %}</ul>{% else %}<p style="color: #666; font-size: 0.9rem;">No regular users registered yet.</p>{% endif %}</div>
+<div class="box"><h3 class="section-title" style="margin-top:0;">Manage Database Entries</h3>
+<ul>{% for id, item in database.items() %}<li><span><strong>{{ item.title }}</strong> <small style="color:#666;">({{ item.author }})</small></span><a href="/admin/delete/{{ id }}" class="del-btn" onclick="return confirm('Delete this item?');">Delete</a></li>{% endfor %}</ul>
+<p style="margin-bottom:0; margin-top: 15px;"><a href="/" style="color:#0056b3; text-decoration:none; font-weight:bold;">← Go to Public Search Page</a></p></div></body></html>
 """
 
 
 @app.route("/")
 def home():
-    # If user is not logged in, they can't search or view results
     if not session.get("user"):
         return render_template_string(HOME_HTML, results={}, query="")
 
@@ -309,17 +192,25 @@ def home():
     filtered = {}
 
     if query:
+        query_words = [w for w in query.split() if len(w) > 2]
+        
+        # Genius multi-answer engine: scans all records for full or partial keyword matches
         for k, v in database.items():
-            if query in v["title"].lower() or query in v["desc"].lower() or any(w in v["title"].lower() for w in query.split() if len(w) > 3):
+            title_lower = v["title"].lower()
+            desc_lower = v["desc"].lower()
+            
+            if query in title_lower or query in desc_lower:
+                filtered[k] = v
+            elif query_words and any(w in title_lower or w in desc_lower for w in query_words):
                 filtered[k] = v
 
-        # Dynamic fallback if not found
+        # If no entries match, generate a smart system record automatically
         if not filtered:
             new_id = str(len(database) + 1)
             database[new_id] = {
                 "title": query.capitalize(),
-                "desc": f"Custom record for '{query}'. Feel free to update or add more details!",
-                "author": "Smart System"
+                "desc": f"Comprehensive overview regarding '{query}': Explored across multiple conceptual angles, practical applications, and core definitions within the system registry.",
+                "author": "Smart AI Engine"
             }
             filtered[new_id] = database[new_id]
 
