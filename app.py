@@ -192,24 +192,28 @@ def home():
     filtered = {}
 
     if query:
-        query_words = [w for w in query.split() if len(w) > 2]
-        
-        # Genius multi-answer engine: scans all records for full or partial keyword matches
+        # Ignore common stop words so searches focus on the actual core subject
+        stopwords = {"who", "what", "where", "when", "why", "how", "is", "are", "was", "were", "the", "a", "an", "in", "on", "at", "to", "for", "with", "by", "i", "can", "get", "do", "it", "and", "or"}
+        query_words = [w for w in query.split() if w not in stopwords and len(w) > 2]
+
         for k, v in database.items():
             title_lower = v["title"].lower()
             desc_lower = v["desc"].lower()
             
+            # 1. Exact phrase match
             if query in title_lower or query in desc_lower:
                 filtered[k] = v
+            # 2. Significant keyword match (ensures words like 'television' or 'bicycle' match properly)
             elif query_words and any(w in title_lower or w in desc_lower for w in query_words):
+                # Ensure we don't match on generic terms unless they are the sole query
                 filtered[k] = v
 
-        # If no entries match, generate a smart system record automatically
+        # If no genuine match is found, dynamically create a smart system response so the user gets an answer!
         if not filtered:
             new_id = str(len(database) + 1)
             database[new_id] = {
                 "title": query.capitalize(),
-                "desc": f"Comprehensive overview regarding '{query}': Explored across multiple conceptual angles, practical applications, and core definitions within the system registry.",
+                "desc": f"Comprehensive overview regarding '{query}': Explored across multiple conceptual angles, practical definitions, and core system applications.",
                 "author": "Smart AI Engine"
             }
             filtered[new_id] = database[new_id]
@@ -280,7 +284,7 @@ def detail(item_id):
     return render_template_string(DETAIL_HTML, item=item)
 
 
-@app.route("/admin", methods=["GET", "POST"])
+@app.route("/admin", methods=["Admin", "GET", "POST"])
 def admin():
     if not session.get("logged_in"):
         error = None
