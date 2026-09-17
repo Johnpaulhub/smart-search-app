@@ -1,52 +1,84 @@
-!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Search App</title>
+    <title>Universal Smart Search & Share</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            text-align: center;
-            padding-top: 50px;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"] {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; color: #333; margin: 0; }
+        h2 { font-size: 1.3rem; margin-bottom: 10px; }
+        .box { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .search-box, input, textarea { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; background: white; font-family: sans-serif; }
+        .btn { background: #0056b3; color: white; border: none; padding: 10px; font-size: 1rem; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; }
+        .btn-share { background: #28a745; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        a { text-decoration: none; color: #0056b3; font-weight: bold; font-size: 1rem; display: block; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 0.9rem; }
+        .admin-link { display: block; margin-top: 25px; text-align: center; font-size: 0.9rem; color: #666; }
+        .badge { background: #e2e8f0; color: #475569; font-size: 0.75rem; padding: 3px 6px; border-radius: 4px; float: right; }
+        .author-text { font-size: 0.8rem; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Smart Search</h2>
-        <form action="/" method="POST">
-            <input type="text" name="query" placeholder="Type your search here..." required>
-            <br>
-            <button type="submit">Search</button>
-        </form>
+    <div class="top-bar">
+        <div>
+            {% if session.get('user') %}
+                <span>Hello, <strong>{{ session.get('user') }}</strong></span>
+            {% else %}
+                <span>Guest User</span>
+            {% endif %}
+        </div>
+        <div>
+            {% if session.get('user') %}
+                <a href="/user-logout" style="color: #dc3545; font-size: 0.85rem;">Logout</a>
+            {% else %}
+                <a href="/user-login" style="font-size: 0.85rem; display:inline-block; margin-right:10px;">Login</a>
+                <a href="/user-register" style="font-size: 0.85rem; display:inline-block; color: #28a745;">Sign Up</a>
+            {% endif %}
+        </div>
     </div>
+
+    {% if session.get('user') %}
+        <div class="box">
+            <h2>Universal Search (Any Word or Topic)</h2>
+            <form action="/" method="GET">
+                <input type="text" name="q" class="search-box" value="{{ query }}" placeholder="Type any word, question, or topic...">
+                <button type="submit" class="btn">Search</button>
+            </form>
+        </div>
+
+        <div class="box" style="border-top: 4px solid #28a745;">
+            <h2>Contribute a Word or Topic</h2>
+            <form action="/add" method="POST">
+                <input type="text" name="title" placeholder="Word or Topic Title..." required>
+                <textarea name="desc" rows="2" placeholder="Write description or meaning..." required></textarea>
+                <button type="submit" class="btn btn-share">Publish Word</button>
+            </form>
+        </div>
+
+        {% if query %}
+            <h3>Results for "{{ query }}"</h3>
+            {% if results %}
+                {% for id, item in results.items() %}
+                <div class="card">
+                    <span class="badge">ID: {{ id }}</span>
+                    <a href="/detail/{{ id }}">{{ item.title }}</a>
+                    <div class="author-text">Contributed by: {{ item.author }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <p style="margin:0; color:#666;">No results found for "{{ query }}".</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <div class="box" style="text-align: center; padding: 30px;">
+            <h2>🔒 Access Restricted</h2>
+            <p style="color: #666; margin-bottom: 20px;">You must log in or sign up to access the universal search engine and contributions.</p>
+            <a href="/user-login" class="btn" style="display: inline-block; margin-bottom: 10px; text-decoration: none;">Login to Your Account</a>
+            <a href="/user-register" class="btn btn-share" style="display: inline-block; text-decoration: none;">Create New Account</a>
+        </div>
+    {% endif %}
+
+    <a href="/admin" class="admin-link">🔒 Admin Login & Dashboard</a>
 </body>
 </html>
