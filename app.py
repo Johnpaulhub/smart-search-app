@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
-import os
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_production_key_change_this'
@@ -86,13 +85,17 @@ def login():
         
     return redirect(url_for('home'))
 
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET', 'POST'])
 def search():
     if 'username' not in session:
         flash('You must log in to search.', 'error')
         return redirect(url_for('home'))
     
-    query = request.form.get('query', '').strip()
+    # Handle both GET and POST requests gracefully to avoid "Method Not Allowed"
+    if request.method == 'POST':
+        query = request.form.get('query', '').strip()
+    else:
+        query = request.args.get('query', '').strip()
     
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -100,7 +103,6 @@ def search():
     rows = cursor.fetchall()
     conn.close()
     
-    # Format database rows into dictionaries for the template
     results = [{"id": r[0], "title": r[1], "content": r[2], "contributor": r[3]} for r in rows]
     
     return render_template(
